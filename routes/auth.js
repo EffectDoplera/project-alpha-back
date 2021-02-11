@@ -4,15 +4,16 @@ const config = require('config')
 const jwt = require('jsonwebtoken')
 const { check, validationResult } = require('express-validator')
 const User = require('./../models/User')
+const ProfilePicture = require('./../models/ProfilePicture')
 const router = Router()
 
 router.post(
   '/register',
   [
-    check('data.email', 'Некорректный email').isEmail(),
-    check('data.password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 }),
-    check('data.firstName', 'Отсутсвует имя пользователя').notEmpty(),
-    check('data.surname', 'Отсутствует фамиля пользователя').notEmpty()
+    check('email', 'Некорректный email').isEmail(),
+    check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 }),
+    check('firstName', 'Отсутсвует имя пользователя').notEmpty(),
+    check('lastName', 'Отсутствует фамиля пользователя').notEmpty()
   ],
   async (req, res) => {
     try {
@@ -25,7 +26,7 @@ router.post(
         })
       }
 
-      const { email, password, firstName, surname } = req.body.data
+      const { email, password, firstName, lastName } = req.body
 
       const candidate = await User.findOne({ email })
 
@@ -34,8 +35,15 @@ router.post(
       }
 
       const hashedPassword = await bcrypt.hash(password, 12)
-      const user = new User({ email, password: hashedPassword, firstName, surname })
+      const user = new User({ email, password: hashedPassword, firstName, lastName })
+      const picture = new ProfilePicture({
+        userId: user._id
+      })
+      user.picture = picture
 
+      console.log(user)
+
+      await picture.save()
       await user.save()
 
       res.status(201).json({ message: 'Пользователь создан' })
