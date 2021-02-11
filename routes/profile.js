@@ -7,7 +7,11 @@ router.get(
   [],
   async (req, res) => {
     try {
-      const user = await User.findOne({ _id: req.params.uid })
+      const user = await User
+      .findById(req.params.uid)
+      .populate('picture')
+      //TODO: fix this
+      user.password = undefined
 
       res.json(user)
     } catch (e) {
